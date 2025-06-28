@@ -50,10 +50,7 @@ git commit -m "Complete VideoLLaMA3 Blind Navigation Training System
 Real-time visual navigation assistance for blind pedestrians.
 Processes live video and generates spoken navigation instructions.
 
-✅ Ready for UC Merced cluster deployment and team collaboration.
-
-🤖 Generated with Claude Code
-Co-Authored-By: Claude <noreply@anthropic.com>"
+✅ Ready for UC Merced cluster deployment and team collaboration."
 ```
 
 ### 6. Set main branch:
