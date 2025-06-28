@@ -1,60 +1,113 @@
+# VideoLLaMA3 Blind Navigation - Git Ignore
+
 # Python
-__pycache__
-*.pyc
-*.egg-info
-dist
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Log
-*.log
-*.log.*
-*.json
-*.jsonl
-log_dir*/
-temp*/
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+videollama3_env/
 
-# Data
-!**/alpaca-data-conversation.json
-
-# Editor
-.idea
+# IDE
+.vscode/
+.idea/
 *.swp
+*.swo
+*~
 
-# Other
-.DS_Store
-3rd_parties
-
-# jupyter
+# Jupyter Notebooks
 .ipynb_checkpoints
 
-# DevContainer
-!.devcontainer/*
+# Data files (large)
+data/videos/*.mp4
+data/videos/*.avi
+data/videos/*.mov
+*.mp4
+*.avi
+*.mov
 
-# Demo
-serve_images/
+# Model files (use Git LFS)
+*.bin
+*.safetensors
+*.pth
+*.ckpt
+
+# Logs
+logs/
+*.log
+*.out
+*.err
+
+# Cache
+cache/
+.cache/
+*.cache
+__pycache__/
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+tmp/
 temp/
+*.tmp
+*.temp
 
-# data folder
-data/
-dataset/
-datasets/
-
-# training folder
-wandb
-ckpts*
-output
-output/
-checkpoints
+# Training outputs
+runs/
+trained_models/
 checkpoints/
-work_dirs*/
+wandb/
+tensorboard_logs/
 
-# evaluation folder
-# /eval
-# /eval*
-/eval_output
+# Hugging Face cache
+.transformers_cache/
+.huggingface/
 
-# pretrained weights
-pretrained/
-publish_models/
-public_models/
-test_data/
-debug_scripts
+# Cluster specific
+*.tar.gz
+*.zip
+slurm-*.out
+slurm-*.err
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Large annotation files (consider using Git LFS)
+data/annotations/split_train.json
+data/annotations/archive.zip

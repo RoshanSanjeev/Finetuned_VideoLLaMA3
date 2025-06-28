@@ -16,7 +16,13 @@ import cv2
 import imageio
 import ffmpeg
 from PIL import Image
-from decord import VideoReader, cpu
+# from decord import VideoReader, cpu
+try:
+    from decord import VideoReader, cpu
+except ImportError:
+    print("Warning: decord not available, using alternative video loading")
+    VideoReader = None
+    cpu = None
 
 from .constants import NUM_FRAMES, MAX_FRAMES, NUM_FRAMES_PER_SECOND, MODAL_INDEX_MAP, DEFAULT_IMAGE_TOKEN
 
@@ -376,11 +382,18 @@ def load_video_from_ids(video_path, s=None, e=None, fps=None, max_frames=None, t
         vid_fps = 25
         num_frames_of_video = len(gif_reader)
     else:
-        vreader = VideoReader(video_path, ctx=cpu(0), num_threads=2)
-        # vreader = VideoReader(video_path, ctx=cpu(0), num_threads=1)
-
-        vid_fps = vreader.get_avg_fps()
-        num_frames_of_video = len(vreader)
+        if VideoReader is not None:
+            vreader = VideoReader(video_path, ctx=cpu(0), num_threads=2)
+            vid_fps = vreader.get_avg_fps()
+            num_frames_of_video = len(vreader)
+        else:
+            # Fallback using opencv when decord is not available
+            import cv2
+            cap = cv2.VideoCapture(video_path)
+            vid_fps = cap.get(cv2.CAP_PROP_FPS)
+            num_frames_of_video = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            cap.release()
+            vreader = None
 
     # 2. Determine frame range & Calculate frame indices
     f_start = 0                       if s is None else max(int(s * vid_fps) - 1, 0)
@@ -401,7 +414,19 @@ def load_video_from_ids(video_path, s=None, e=None, fps=None, max_frames=None, t
     elif video_path.endswith('.gif'):
         frames = [cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB) for idx, frame in enumerate(gif_reader) if idx in sampled_frame_indices]
     else:
-        frames = vreader.get_batch(sampled_frame_indices).asnumpy()
+        if vreader is not None:
+            frames = vreader.get_batch(sampled_frame_indices).asnumpy()
+        else:
+            # Fallback using opencv
+            cap = cv2.VideoCapture(video_path)
+            frames = []
+            for frame_idx in sampled_frame_indices:
+                cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
+                ret, frame = cap.read()
+                if ret:
+                    frames.append(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+            cap.release()
+            frames = np.array(frames)
 
     # frames = frames.transpose(0, 3, 1, 2)
     timestamps = [x / vid_fps for x in sampled_frame_indices]

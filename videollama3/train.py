@@ -515,6 +515,10 @@ def train(attn_implementation=None):
     config._attn_implementation = attn_implementation
     config.use_token_compression = model_args.use_token_compression
     config.use_flash_loss = model_args.use_flash_loss
+    
+    # Set multimodal attention implementation for M3 Max compatibility
+    if hasattr(model_args, 'mm_attn_implementation'):
+        config.mm_attn_implementation = model_args.mm_attn_implementation
 
     if model_args.vision_encoder is not None:
         config.vision_encoder = model_args.vision_encoder
@@ -522,7 +526,6 @@ def train(attn_implementation=None):
             model_args.model_path,
             config=config,
             torch_dtype=compute_dtype,
-            do_sample=True,
             **bnb_model_from_pretrained_args
         )
         if 'mixtral' in model_args.model_type:
@@ -533,7 +536,6 @@ def train(attn_implementation=None):
             model_args.model_path,
             config=config,
             torch_dtype=compute_dtype,
-            do_sample=True,
             **bnb_model_from_pretrained_args
         )
     model.config.use_cache = False
@@ -630,7 +632,11 @@ def train(attn_implementation=None):
         # 1. acquire image size
         model.config.image_size = data_args.image_size = vision_encoder.image_size
         # 2. calculate the number of tokens in the image
-        model.config.image_token_length = data_args.image_token_length = mm_projector.cal_proj_size(vision_encoder.num_patches_per_side)
+        if hasattr(mm_projector, 'cal_proj_size'):
+            model.config.image_token_length = data_args.image_token_length = mm_projector.cal_proj_size(vision_encoder.num_patches_per_side)
+        else:
+            # Fallback for projectors without cal_proj_size method (e.g., nn.Linear)
+            model.config.image_token_length = data_args.image_token_length = vision_encoder.num_patches_per_side * vision_encoder.num_patches_per_side
         # 3. check if alignment
         model.config.is_alignment = training_args.is_alignment = data_args.is_alignment = (
             model.config.mm_projector_lr is not None and
@@ -662,7 +668,9 @@ def train(attn_implementation=None):
 
     if data_args.use_batch_flattening:
         rank0_print('You are using flattening operation to flatten the entire mini batch into a single sequence')
-        assert model.config._attn_implementation == 'flash_attention_2'
+        # Allow both flash_attention_2 and eager attention for M3 Max compatibility
+        if model.config._attn_implementation not in ['flash_attention_2', 'eager']:
+            raise ValueError(f"Unsupported attention implementation: {model.config._attn_implementation}")
         assert version.parse(transformers.__version__) >= version.parse("4.44.0")
         data_module = make_flattening_supervised_data_module(vlprocessor=vlprocessor, data_args=data_args)
     else:
@@ -691,4 +699,5 @@ def train(attn_implementation=None):
 
 
 if __name__ == "__main__":
-    train(attn_implementation="flash_attention_2")
+    # Use eager attention for M3 Max compatibility (no CUDA required)
+    train(attn_implementation="eager")
