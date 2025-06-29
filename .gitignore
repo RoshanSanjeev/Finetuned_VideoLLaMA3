@@ -81,12 +81,23 @@ temp/
 *.tmp
 *.temp
 
-# Training outputs
+# Training outputs (keep final model structure)
 runs/
-trained_models/
+trained_models/*/pytorch_model.bin
+trained_models/*/model.safetensors
+trained_models/*/optimizer.pt
+trained_models/*/scheduler.pt
+trained_models/*/rng_state.pth
+trained_models/*/training_args.bin
 checkpoints/
 wandb/
 tensorboard_logs/
+
+# But keep the final trained model config files
+!trained_models/final_188_navigation_complete/config.json
+!trained_models/final_188_navigation_complete/adapter_config.json
+!trained_models/final_188_navigation_complete/adapter_model.bin
+!trained_models/final_188_navigation_complete/tokenizer*
 
 # Hugging Face cache
 .transformers_cache/
